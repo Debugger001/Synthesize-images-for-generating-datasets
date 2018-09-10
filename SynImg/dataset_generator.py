@@ -23,6 +23,34 @@ from collections import namedtuple
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
+Color = {
+'__background__': (0, 0, 0),
+'bottle_+c': (64, 0, 0),
+'bottle_amecoffee': (128, 0, 0),
+'bottle_blacktea': (192, 0, 0),
+'bottle_coldtea': (255, 0, 0),
+'bottle_graintea': (0, 64, 0),
+'bottle_greentea': (0, 128, 0),
+'bottle_jianlibao': (0, 192, 0),
+'bottle_milktea': (0, 255, 0),
+'bottle_mingtea': (0, 0, 64),
+'bottle_newcoffee': (0, 0, 128),
+'bottle_pepsi2': (0, 0, 192),
+'bottle_redtea': (0, 0, 255),
+'bottle_sour1': (64, 64, 0),
+'bottle_sour2': (64, 0, 64),
+'bottle_sprite': (0, 64, 64),
+'bottle_yezhi': (128, 128, 0),
+'cubic_green': (128, 0, 128),
+'cup_orange': (0, 128, 128),
+'drink_juice': (192, 192, 0),
+'milk': (192, 0, 192),
+'noodles_hongshao': (0, 192, 192),
+'noodles_suancai': (255, 255, 0),
+'tissue1': (255, 0, 255),
+'tissue2': (0, 255, 255),
+}
+
 gray_value_dict = {'__background__': 0}
 gray_value = 1
 dir_list = tuple(open('/home/lc/syndata-generation/demo_data_dir/objects_dir/dir_list.txt', 'r'))

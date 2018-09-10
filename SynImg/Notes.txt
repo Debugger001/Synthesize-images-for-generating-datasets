@@ -1,0 +1,32 @@
+1. In /syndata-generation/dataset_generator.py: 83: get_list_of_images() change '*/*/*.png' into ('*/', '*.png') according to situation.
+2. Structure:
+      /args.exp/:  (/syndata-generation/output_dir/)
+            labels.txt    annotations/    images/
+      /args.root/:
+            objects.../:
+                  *.png
+3. img_files: [objects.png........] * times(N)
+   labels: [labels] (according to img_files)
+   anno_dir = export_path/annotations
+   img_dir = export_path/images
+   background_dir = BACKGROUND_DIR
+   background_files: [background.jpg...]
+   img_labels: [(objects.png, labels)...]
+   distractor_labels: [distractor_label...]
+   distractor_list: [distractor.png...]
+   distractor_files: [(distrctor.png, None)...]
+
+   img_file: export_path/images/idx_blur.jpg
+   anno_file: export_path/annotations/idx.xml
+   params = (objects, distractor_objects, img_file, anno_file, bg_file)
+       each params represents one picture to be synthesized.
+   params_list: [params......] * blur.size
+   img_files: [img_file......] * blur.size
+   anno_files: [anno_file......] * blur.size
+
+
+
+
+
+
+   

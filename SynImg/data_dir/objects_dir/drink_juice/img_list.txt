@@ -1,0 +1,16 @@
+drink_01.png
+drink_02.png
+drink_03.png
+drink_04.png
+drink_06.png
+drink_07.png
+drink_08.png
+drink_11.png
+drink_12.png
+drink_13.png
+drink_14.png
+drink_15.png
+drink_16.png
+drink_17.png
+drink_18.png
+drink_juice.png
