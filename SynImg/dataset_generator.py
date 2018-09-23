@@ -53,7 +53,7 @@ Color = {
 
 gray_value_dict = {'__background__': 0}
 gray_value = 1
-dir_list = tuple(open('/home/lc/syndata-generation/demo_data_dir/objects_dir/dir_list.txt', 'r'))
+dir_list = tuple(open('/home/lc/syndata-generation/data_dir/train/objects_dir/dir_list.txt', 'r'))
 for dir_list_itr in dir_list:
     gray_value_dict[dir_list_itr.rstrip()] = gray_value
     gray_value += 1
@@ -355,10 +355,10 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
 
     print("Working on %s" % img_file)
 
-    if os.path.exists(img_file):
-        return img_file
+    if os.path.exists(anno_file):
+        return anno_file
 
-    generated_files = glob.glob(os.path.join('/home/lc/syndata-generation/output_dir/val/', '*.jpg'))
+    generated_files = glob.glob(os.path.join('/home/lc/syndata-generation/output_dir/train/', '*.jpg'))
     print("Already synthesized images: %s"%(len(generated_files)) )
 
     all_objects = objects + distractor_objects
@@ -366,7 +366,7 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
     gray_value_offset = 1
 
     while True:
-        # top = Element('annotation')
+        top = Element('annotation')
 
         background_dir = BACKGROUND_DIR
         background_files = glob.glob(os.path.join(background_dir, BACKGROUND_GLOB_STRING))
@@ -383,18 +383,20 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
                     break
             background = background.resize((w, h), Image.ANTIALIAS)
             backgrounds.append(background.copy())
-            sem_backgrounds_blur = []
-            ins_backgrounds_blur = []
-            for o in range(len(objects)):
-                sem_backgrounds_blur.append(Image.fromarray(np.zeros((512, 512), dtype=np.uint8)))
-                ins_backgrounds_blur.append(Image.fromarray(np.zeros((512, 512), dtype=np.uint8)))
-            sem_backgrounds.append(sem_backgrounds_blur)
-            ins_backgrounds.append(ins_backgrounds_blur)
+            # sem_backgrounds_blur = []
+            # ins_backgrounds_blur = []
+            # for o in range(len(objects)):
+                # sem_backgrounds_blur.append(Image.fromarray(np.zeros((512, 512), dtype=np.uint8)))
+                # ins_backgrounds_blur.append(Image.fromarray(np.zeros((512, 512), dtype=np.uint8)))
+            # sem_backgrounds.append(sem_backgrounds_blur)
+            # ins_backgrounds.append(ins_backgrounds_blur)
+            sem_backgrounds.append(Image.fromarray(np.zeros((512, 512), dtype=np.uint8)))
+            ins_backgrounds.append(Image.fromarray(np.zeros((512, 512), dtype=np.uint8)))
 
         already_syn = []
-        obj_num = 0
+        # obj_num = 0
         obj_already_syn = {'__background__': 0}
-        dir_list = tuple(open('/home/lc/syndata-generation/demo_data_dir/objects_dir/dir_list.txt', 'r'))
+        dir_list = tuple(open('/home/lc/syndata-generation/data_dir/train/objects_dir/dir_list.txt', 'r'))
         for dir_list_itm in dir_list:
             obj_already_syn[dir_list_itm.rstrip()] = 0
         for idx, obj in enumerate(all_objects):
@@ -426,6 +428,10 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
                         break
                 foreground = foreground.resize((o_w, o_h), Image.ANTIALIAS)
                 mask = mask.resize((o_w, o_h))
+            ifflip = random.random()
+            if (ifflip > 0.5):
+                foreground = foreground.transpose(Image.FLIP_LEFT_RIGHT)
+                mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
             if rotation_augment:
                 max_degrees = MAX_DEGREES
                 while True:
@@ -489,13 +495,31 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
                 for ins_mask_rows in range(0, ins_mask_np.shape[0]):
                     for ins_mask_cols in range(0, ins_mask_np.shape[1]):
                         if ins_mask_np[ins_mask_rows][ins_mask_cols] > 0:
-                                # ins_mask[ins_mask_rows][ins_mask_cols] = gray_value_offset
-                                ins_mask[ins_mask_rows][ins_mask_cols] = 255
-                # gray_value_offset += 1
+                                ins_mask[ins_mask_rows][ins_mask_cols] = gray_value_offset
+                                # ins_mask[ins_mask_rows][ins_mask_cols] = 255
+                gray_value_offset += 1
                 ins_mask_PIL = Image.fromarray(ins_mask)
 
                 paste_mask = mask
                 paste_mask_np = PIL2array1C(mask)
+
+            else:
+                sem_mask_np = PIL2array1C(mask)
+                sem_mask = np.zeros((sem_mask_np.shape[0], sem_mask_np.shape[1]), dtype=np.uint8)
+                for sem_mask_rows in range(0, sem_mask_np.shape[0]):
+                    for sem_mask_cols in range(0, sem_mask_np.shape[1]):
+                        if sem_mask_np[sem_mask_rows][sem_mask_cols] > 0:
+                            sem_mask[sem_mask_rows][sem_mask_cols] = 0
+                sem_mask_PIL = Image.fromarray(sem_mask)
+
+                ins_mask_np = PIL2array1C(mask)
+                ins_mask = np.zeros((ins_mask_np.shape[0], ins_mask_np.shape[1]), dtype=np.uint8)
+                for ins_mask_rows in range(0, ins_mask_np.shape[0]):
+                    for ins_mask_cols in range(0, ins_mask_np.shape[1]):
+                        if ins_mask_np[ins_mask_rows][ins_mask_cols] > 0:
+                                ins_mask[ins_mask_rows][ins_mask_cols] = 0
+                                # ins_mask[ins_mask_rows][ins_mask_cols] = 255
+                ins_mask_PIL = Image.fromarray(ins_mask)
 
 
 
@@ -511,8 +535,8 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
             # print("%i pixel values in the mask"%count_pixel_value(mask))
             # print("%i objects in the image"%len(objects))
 
-            if obj[1] in gray_value_dict:
-                obj_already_syn[obj[1]] += 1
+            # if obj[1] in gray_value_dict:
+            #     obj_already_syn[obj[1]] += 1
 
 
             for i in range(len(blending_list)):
@@ -520,15 +544,18 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
 
                     backgrounds[i].paste(foreground, (x, y), mask)
 
-                    if obj[1] in gray_value_dict:
+                    # if obj[1] in gray_value_dict:
                         # sem_backgrounds[i][obj_num].paste(sem_mask_PIL, (x, y), mask)
-                        ins_backgrounds[i][obj_num].paste(ins_mask_PIL, (x, y), mask)
+                        # ins_backgrounds[i][obj_num].paste(ins_mask_PIL, (x, y), mask)
+                    sem_backgrounds[i].paste(sem_mask_PIL, (x, y), mask)
+                    ins_backgrounds[i].paste(ins_mask_PIL, (x, y), mask)
 
                 elif blending_list[i] == 'poisson':
                     offset = (y, x)
                     img_mask = PIL2array1C(mask)
-                    # sem_mask_mask = PIL2array1C(mask)
-                    # ins_mask_mask = PIL2array1C(mask)
+                    sem_mask_mask = PIL2array1C(mask)
+                    ins_mask_mask = PIL2array1C(mask)
+
                     img_src = PIL2array3C(foreground).astype(np.float64)
                     # sem_mask_src = PIL2array1C(sem_mask_PIL).astype(np.float64)
                     # ins_mask_src = PIL2array1C(ins_mask_PIL).astype(np.float64)
@@ -541,11 +568,11 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
                         = create_mask(img_mask.astype(np.float64),
                           img_target, img_src, offset=offset)
                     # sem_mask_mask, sem_mask_src, offset_adj \
-                    #     = create_mask(sem_mask_mask.astype(np.float64),
-                    #       sem_mask_target, sem_mask_src, offset=offset)
+                        # = create_mask(sem_mask_mask.astype(np.float64),
+                          # sem_mask_target, sem_mask_src, offset=offset)
                     # ins_mask_mask, ins_mask_src, offset_adj \
-                    #     = create_mask(ins_mask_mask.astype(np.float64),
-                    #       ins_mask_target, ins_mask_src, offset=offset)
+                        # = create_mask(ins_mask_mask.astype(np.float64),
+                          # ins_mask_target, ins_mask_src, offset=offset)
 
                     background_array = poisson_blend(img_mask, img_src, img_target,
                                     method='normal', offset_adj=offset_adj)
@@ -555,11 +582,11 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
                                     # method='normal', offset_adj=offset_adj)
 
                     backgrounds[i] = Image.fromarray(background_array, 'RGB')
-                    if obj[1] in gray_value_dict:
-                        # sem_backgrounds[i][obj_num].paste(sem_mask_PIL, (x, y), mask)
-                        ins_backgrounds[i][obj_num].paste(ins_mask_PIL, (x, y), mask)
-                    # sem_backgrounds[i] = Image.fromarray(sem_background_array)
-                    # ins_backgrounds[i] = Image.fromarray(ins_background_array)
+                    # if obj[1] in gray_value_dict:
+                    sem_backgrounds[i].paste(sem_mask_PIL, (x, y), mask)
+                    ins_backgrounds[i].paste(ins_mask_PIL, (x, y), mask)
+                        # sem_backgrounds[i] = Image.fromarray(sem_background_array)
+                        # ins_backgrounds[i] = Image.fromarray(ins_background_array)
 
                 elif blending_list[i] == 'gaussian':
                     Gaussian_mask = Image.fromarray(cv2.GaussianBlur(PIL2array1C(mask),(5,5),2))
@@ -573,9 +600,11 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
                             else:
                                 Gaussian_mask_np[G_i][G_j] = 0
                     mask_Gaussian_mask = Image.fromarray(Gaussian_mask_np)
-                    if obj[1] in gray_value_dict:
+                    # if obj[1] in gray_value_dict:
                         # sem_backgrounds[i][obj_num].paste(sem_mask_PIL, (x, y), mask_Gaussian_mask)
-                        ins_backgrounds[i][obj_num].paste(ins_mask_PIL, (x, y), mask_Gaussian_mask)
+                        # ins_backgrounds[i][obj_num].paste(ins_mask_PIL, (x, y), mask_Gaussian_mask)
+                    sem_backgrounds[i].paste(sem_mask_PIL, (x, y), mask_Gaussian_mask)
+                    ins_backgrounds[i].paste(ins_mask_PIL, (x, y), mask_Gaussian_mask)
 
                 elif blending_list[i] == 'box':
                     Box_mask = Image.fromarray(cv2.blur(PIL2array1C(mask),(3,3)))
@@ -589,60 +618,65 @@ def create_image_anno(objects, distractor_objects, img_file, semantic_file, inst
                             else:
                                 Box_mask_np[B_i][B_j] = 0
                     mask_Box_mask = Image.fromarray(Box_mask_np)
-                    if obj[1] in gray_value_dict:
-                        # sem_backgrounds[i][obj_num].paste(sem_mask_PIL, (x, y), mask_Box_mask)
-                        ins_backgrounds[i][obj_num].paste(ins_mask_PIL, (x, y), mask_Box_mask)
-                if blending_list[i] == 'motion':
-                    backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]))
-                if obj[1] in gray_value_dict:
-                    ins_backgrounds[i][obj_num].save((instance_file + '_' + obj[1] + '_' + str(obj_already_syn[obj[1]]) + '.png').replace('none', blending_list[i]))
-            if obj[1] in gray_value_dict:
-                obj_num += 1
+                    # if obj[1] in gray_value_dict:
+                    sem_backgrounds[i].paste(sem_mask_PIL, (x, y), mask_Box_mask)
+                    ins_backgrounds[i].paste(ins_mask_PIL, (x, y), mask_Box_mask)
+                # if blending_list[i] == 'motion':
+                    # backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]))
+                # if obj[1] in gray_value_dict:
+                    # ins_backgrounds[i][obj_num].save((instance_file + '_' + obj[1] + '_' + str(obj_already_syn[obj[1]]) + '.png').replace('none', blending_list[i]))
+            # if obj[1] in gray_value_dict:
+                # obj_num += 1
+
+
+    # for i in range(len(blending_list)):
+        # print("???")
+        # backgrounds[i].save(img_file.replace('none', blending_list[i]))
+        # print(obj_num)
+            if idx >= len(objects):
+                continue
+            object_root = SubElement(top, 'object')
+            object_type = obj[1]
+            object_type_entry = SubElement(object_root, 'name')
+            object_type_entry.text = str(object_type)
+            object_bndbox_entry = SubElement(object_root, 'bndbox')
+            x_min_entry = SubElement(object_bndbox_entry, 'xmin')
+            x_min_entry.text = '%d'%(max(1,x+xmin))
+            x_max_entry = SubElement(object_bndbox_entry, 'xmax')
+            x_max_entry.text = '%d'%(min(w,x+xmax))
+            y_min_entry = SubElement(object_bndbox_entry, 'ymin')
+            y_min_entry.text = '%d'%(max(1,y+ymin))
+            y_max_entry = SubElement(object_bndbox_entry, 'ymax')
+            y_max_entry.text = '%d'%(min(h,y+ymax))
+            difficult_entry = SubElement(object_root, 'difficult')
+            difficult_entry.text = '0' # Add heuristic to estimate difficulty later on
 
         if attempt == MAX_ATTEMPTS_TO_SYNTHESIZE:
             continue
         else:
             break
-    for i in range(len(blending_list)):
-        # print("???")
-        backgrounds[i].save(img_file.replace('none', blending_list[i]))
-        # print(obj_num)
-        # if idx >= len(objects):
-        #     continue
-        # object_root = SubElement(top, 'object')
-        # object_type = obj[1]
-        # object_type_entry = SubElement(object_root, 'name')
-        # object_type_entry.text = str(object_type)
-        # object_bndbox_entry = SubElement(object_root, 'bndbox')
-        # x_min_entry = SubElement(object_bndbox_entry, 'xmin')
-        # x_min_entry.text = '%d'%(max(1,x+xmin))
-        # x_max_entry = SubElement(object_bndbox_entry, 'xmax')
-        # x_max_entry.text = '%d'%(min(w,x+xmax))
-        # y_min_entry = SubElement(object_bndbox_entry, 'ymin')
-        # y_min_entry.text = '%d'%(max(1,y+ymin))
-        # y_max_entry = SubElement(object_bndbox_entry, 'ymax')
-        # y_max_entry.text = '%d'%(min(h,y+ymax))
-        # difficult_entry = SubElement(object_root, 'difficult')
-        # difficult_entry.text = '0' # Add heuristic to estimate difficulty later on
-    print(img_file + ' done generating.')
 
-    # for i in range(len(blending_list)):
-    #     if blending_list[i] == 'motion':
-    #         backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]), PIL2array1C(sem_backgrounds[i]), PIL2array1C(ins_backgrounds[i]))
+
+    for i in range(len(blending_list)):
+        # print(blending_list[i])
+        if blending_list[i] == 'motion':
+            backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]))
     #
     #     # print("???")
-    #     backgrounds[i].save(img_file.replace('none', blending_list[i]))
+        backgrounds[i].save(img_file.replace('none', blending_list[i]))
     #
-    #     sem_backgrounds[i].save(semantic_file.replace('none', blending_list[i]))
+        # print(semantic_file)
+        sem_backgrounds[i].save(semantic_file.replace('none', blending_list[i]))
     #     # print("%i pixel values in the image"%count_pixel_value(sem_backgrounds[i]))
     #     # print("%i objects in the image"%len(objects))
     #
-    #     ins_backgrounds[i].save(instance_file.replace('none', blending_list[i]))
+        ins_backgrounds[i].save(instance_file.replace('none', blending_list[i]))
 
     # print("XML...")
-    # xmlstr = xml.dom.minidom.parseString(tostring(top)).toprettyxml(indent="    ")
-    # with open(anno_file, "w") as f:
-        # f.write(xmlstr)
+    xmlstr = xml.dom.minidom.parseString(tostring(top)).toprettyxml(indent="    ")
+    with open(anno_file, "w") as f:
+        f.write(xmlstr)
+    print(img_file + ' done generating.')
 
 def gen_syn_data(image_files, labels, img_dir, anno_dir, sem_mask_dir, ins_mask_dir, scale_augment, rotation_augment, dontocclude, add_distractors):
     '''Creates list of objects and distrctor objects to be pasted on what images.
@@ -690,7 +724,7 @@ def gen_syn_data(image_files, labels, img_dir, anno_dir, sem_mask_dir, ins_mask_
 
     generation_num = 0
 
-    while generation_num < 4000:
+    while generation_num < 6000:
         # Get list of objects
         objects = []
         img_labels = list(zip(image_files, labels))
@@ -710,8 +744,8 @@ def gen_syn_data(image_files, labels, img_dir, anno_dir, sem_mask_dir, ins_mask_
 
         for blur in BLENDING_LIST:
             img_file = os.path.join(img_dir, '%i%s.jpg'%(idx,blur))
-            semantic_file = os.path.join(sem_mask_dir, '%i_%s'%(idx,blur))
-            instance_file = os.path.join(ins_mask_dir, '%i%s'%(idx,blur))
+            semantic_file = os.path.join(sem_mask_dir, '%i_%s.png'%(idx,blur))
+            instance_file = os.path.join(ins_mask_dir, '%i_%s.png'%(idx,blur))
             anno_file = os.path.join(anno_dir, '%i.xml'%idx)
             params = (objects, distractor_objects, img_file, semantic_file, instance_file, anno_file)
             params_list.append(params)
@@ -762,11 +796,10 @@ def generate_synthetic_dataset(args):
     if args.auto_label:
         write_labels_file(args.exp, labels)
 
-    anno_dir = os.path.join(args.exp, 'IamUseless')
-    img_dir = os.path.join(args.exp, 'val')
-    sem_mask_dir = os.path.join(args.exp, 'DeleteMe')
-    # ins_mask_dir = os.path.join(args.exp, 'Instance_segmentation_class')
-    ins_mask_dir = os.path.join(args.exp, 'annotations')
+    anno_dir = os.path.join(args.exp, 'annotations')
+    img_dir = os.path.join(args.exp, 'train')
+    sem_mask_dir = os.path.join(args.exp, 'semantic_segmentation_class')
+    ins_mask_dir = os.path.join(args.exp, 'Instance_segmentation_class')
     if not os.path.exists(os.path.join(anno_dir)):
         os.makedirs(anno_dir)
     if not os.path.exists(os.path.join(img_dir)):
@@ -786,7 +819,7 @@ def parse_args():
     '''Parse input arguments
     '''
     parser = argparse.ArgumentParser(description="Create dataset with different augmentations")
-    parser.add_argument("--root", default = "/home/lc/syndata-generation/demo_data_dir/objects_dir/",
+    parser.add_argument("--root", default = "/home/lc/syndata-generation/data_dir/train/objects_dir",
       help="The root directory which contains the images and annotations.")
     parser.add_argument("--exp", default = "/home/lc/syndata-generation/output_dir",
       help="The directory where images and annotation lists will be created.")
