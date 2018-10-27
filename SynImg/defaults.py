@@ -8,8 +8,8 @@ DISTRACTOR_LIST_FILE = '/home/lc/syndata-generation/data_dir/neg_list.txt'
 DISTRACTOR_DIR = '/home/lc/syndata-generation/data_dir/distractor_objects_dir/'
 BLACK_DIR = '/home/lc/syndata-generation/black_output_dir/'
 NOISE_DIR = '/home/lc/syndata-generation/gaussian_noise_dir/'
-TRAIN_IMG_DIR = '/home/lc/syndata-generation/train_output_dir/train/'
-TRAIN_MASK_DIR = '/home/lc/syndata-generation/train_output_dir/annotations/'
+TRAIN_IMG_DIR = '/home/lc/syndata-generation/output_dir/train/'
+TRAIN_MASK_DIR = '/home/lc/syndata-generation/output_dir/semantic_segmentation_class/'
 VAL_IMG_DIR = '/home/lc/syndata-generation/output_dir/val/'
 VAL_MASK_DIR = '/home/lc/syndata-generation/output_dir/annotations/'
 DISTRACTOR_GLOB_STRING = '*.png'
@@ -17,6 +17,7 @@ INVERTED_MASK = True # Set to true if white pixels represent background
 
 # Parameters for generator
 NUMBER_OF_WORKERS = 16
+ORIG_BLENDING_LIST = ['gaussian','poisson', 'none', 'box', 'motion']
 BLENDING_LIST = ['gaussian','poisson', 'none', 'box', 'motion']
 
 # Parameters for images

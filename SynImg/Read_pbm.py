@@ -14,7 +14,7 @@ from tqdm import tqdm
 import argparse
 
 def Read_pbm():
-    data_path = "/Users/pro/Desktop/syndata-generation/demo_data_dir/distractor_objects_dir/honey_bunches/NP1_123.pbm"
+    data_path = "/Users/pro/Desktop/syndata-generation/data_dir/distractor_objects_dir/honey_bunches/NP1_123.pbm"
     img = cv2.imread(data_path, -1)
     print(img)
     print(img.shape)

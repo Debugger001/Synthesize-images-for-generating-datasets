@@ -39,7 +39,7 @@ def check_pixel_value(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create pdm from images.")
-    parser.add_argument("--img_path", type = str, default = "/home/lc/syndata-generation/demo_data_dir/objects_dir/",
+    parser.add_argument("--img_path", type = str, default = "/home/lc/syndata-generation/data_dir/train/objects_dir/",
         help="The directory which contains the images.")
     args = parser.parse_args()
     check_pixel_value(args)

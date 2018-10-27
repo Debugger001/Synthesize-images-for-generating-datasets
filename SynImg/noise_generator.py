@@ -23,7 +23,7 @@ import glob
 
 def pure_black_Gaussian_noise(files):
     img_file = files[0]
-    mask_files = files[1]
+    mask_file = files[1]
     print("Woring on %s"%img_file)
     already_syn_list = glob.glob(os.path.join(BLACK_DIR, '*.jpg'))
     print("Already synthesized %d images."%len(already_syn_list))
@@ -38,18 +38,13 @@ def pure_black_Gaussian_noise(files):
             g = random.randint(0, 255)
             img_fl[i][j] = [r, b, g]
     img_black_np = np.array(img.getdata(), dtype=np.uint8).reshape(img.size[1], img.size[0], 3)
-    masks = []
-    for mask_file in mask_files:
-        mask = Image.open(TRAIN_MASK_DIR + mask_file)
-        mask_np = np.array(mask.getdata(), dtype=np.uint8).reshape(mask.size[1], mask.size[0])
-        masks.append(mask_np)
+    mask = Image.open(TRAIN_MASK_DIR + mask_file)
+    mask_np = np.array(mask.getdata(), dtype=np.uint8).reshape(mask.size[1], mask.size[0])
     for i in range(img_black_np.shape[1]):
         for j in range(img_black_np.shape[0]):
             isbg = True
-            for mask in masks:
-                if mask[i][j] > 0:
-                    isbg = False
-                    break
+            if mask_np[i][j] > 0:
+                isbg = False
             if isbg:
                 img_black_np[i][j] = [0,0,0]
             else:
@@ -83,14 +78,12 @@ files = []
 
 for img in tqdm(img_list):
     file_pair = []
-    mask_files = []
     img_num = img.split('none')[0]
-    for mask in mask_list:
-        mask_num = mask.split('none')[0]
-        if mask_num == img_num:
-            mask_files.append(mask)
     file_pair.append(img)
-    file_pair.append(mask_files)
+    for mask in mask_list:
+        mask_num = mask.split('_none')[0]
+        if mask_num == img_num:
+            file_pair.append(mask)
     files.append(file_pair)
 
 
